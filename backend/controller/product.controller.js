@@ -5,17 +5,22 @@ exports.createProduct = async (req, res) => {
   try {
     const { product_name, product_price, product_description, product_img, product_sex, product_size, product_quantity, product_brand, product_type } = req.body;
 
+    // Expect product_img to be a Cloudinary URL from frontend
+    if (!product_img) {
+      return res.status(400).json({ message: 'Product image URL is required' });
+    }
+
     const product = await Product.create({
       product_name,
       product_price,
       product_description,
-      product_img,
+      product_img, // This will be the Cloudinary URL
       product_sex,
-      product_size,
+      product_size: product_size || -1,
       product_quantity,
       product_brand,
       product_type,
-      seller_id: req.sellerId // Assuming seller is authenticated
+      seller_id: req.sellerId
     });
 
     res.status(201).json({ message: 'Product created successfully', product });

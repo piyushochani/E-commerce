@@ -1,5 +1,11 @@
 const Seller = require('../models/seller.model');
 
+
+exports.loginSeller = async (req, res) => {
+  res.json({ message: "Seller login route working" });
+};
+
+
 // Register a new seller
 exports.registerSeller = async (req, res) => {
   try {

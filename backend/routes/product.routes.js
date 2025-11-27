@@ -1,15 +1,17 @@
-const express = require("express");
+const express = require('express');
 const router = express.Router();
-const productController = require("../controller/product.controller");
-const auth = require("../middleware/auth.middleware");
+const productController = require('../controller/product.controller');
+const { authenticateSeller } = require('../middleware/auth.middleware');
+const { validateProductCreation } = require('../middleware/validation.middleware');
 
-// Seller/Admin only (optional: add role middleware)
-router.post("/add", auth, productController.addProduct);
-router.put("/update/:id", auth, productController.updateProduct);
-router.delete("/delete/:id", auth, productController.deleteProduct);
+// Public routes
+router.get('/', productController.getAllProducts);
+router.get('/:id', productController.getProductById);
 
-// Public
-router.get("/all", productController.getAllProducts);
-router.get("/:id", productController.getProductById);
+// Protected routes - NO UPLOAD MIDDLEWARE FOR NOW
+router.post('/', authenticateSeller, productController.createProduct);
+router.put('/:id', authenticateSeller, productController.updateProduct);
+router.delete('/:id', authenticateSeller, productController.deleteProduct);
+router.get('/seller/my-products', authenticateSeller, productController.getProductsBySeller);
 
 module.exports = router;

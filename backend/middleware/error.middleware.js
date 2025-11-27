@@ -1,9 +1,54 @@
-module.exports = (err, req, res, next) => {
-  const statusCode = err.statusCode || 500;
+// Global Error Handler
+exports.errorHandler = (err, req, res, next) => {
+  console.error('Error:', err);
 
-  res.status(statusCode).json({
-    success: false,
-    message: err.message || "Internal Server Error",
-    stack: process.env.NODE_ENV === "development" ? err.stack : undefined
+  // Mongoose validation error
+  if (err.name === 'ValidationError') {
+    const errors = Object.values(err.errors).map(e => e.message);
+    return res.status(400).json({
+      message: 'Validation Error',
+      errors
+    });
+  }
+
+  // Mongoose duplicate key error
+  if (err.code === 11000) {
+    const field = Object.keys(err.keyPattern)[0];
+    return res.status(400).json({
+      message: `${field} already exists`
+    });
+  }
+
+  // Mongoose cast error (invalid ObjectId)
+  if (err.name === 'CastError') {
+    return res.status(400).json({
+      message: 'Invalid ID format'
+    });
+  }
+
+  // JWT errors
+  if (err.name === 'JsonWebTokenError') {
+    return res.status(401).json({
+      message: 'Invalid token'
+    });
+  }
+
+  if (err.name === 'TokenExpiredError') {
+    return res.status(401).json({
+      message: 'Token has expired'
+    });
+  }
+
+  // Default error
+  res.status(err.status || 500).json({
+    message: err.message || 'Internal Server Error',
+    ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
+  });
+};
+
+// 404 Not Found Handler
+exports.notFound = (req, res, next) => {
+  res.status(404).json({
+    message: `Route ${req.originalUrl} not found`
   });
 };

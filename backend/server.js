@@ -1,78 +1,77 @@
-const dotenv = require('dotenv');
+// FILE: server.js
 const express = require('express');
+const mongoose = require('mongoose');
 const cors = require('cors');
-const cookieParser = require('cookie-parser');
-const connectDB = require('./database/mongodb_connect');
+const dotenv = require('dotenv');
+const path = require('path');
 
 // Load environment variables
 dotenv.config();
 
+// Import routes
+const routes = require('./routes/index');
+
+// Import middleware
+const { errorHandler, notFound } = require('./middleware/error.middleware');
+const { requestLogger } = require('./middleware/logger.middleware');
+
 // Initialize express app
 const app = express();
 
-// Connect to MongoDB
-connectDB();
-
 // Middleware
-app.use(cors({
-  origin: process.env.CLIENT_URL || 'http://localhost:5173',
-  credentials: true
-}));
+app.use(cors()); // Enable CORS for all routes
+app.use(express.json()); // Parse JSON bodies
+app.use(express.urlencoded({ extended: true })); // Parse URL-encoded bodies
+app.use(requestLogger); // Log all requests
 
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-app.use(cookieParser());
+// Serve static files (uploaded images)
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// ===================
-//      ROUTES
-// ===================
-
-// Customer routes
-const customerRoutes = require('./routes/customer.routes');
-app.use('/api/customer', customerRoutes);
-
-// Seller routes
-const sellerRoutes = require('./routes/seller.routes');
-app.use('/api/seller', sellerRoutes);
-
-// Product routes
-const productRoutes = require('./routes/product.routes');
-app.use('/api/product', productRoutes);
-
-// Cart routes
-const cartRoutes = require('./routes/cart.routes');
-app.use('/api/cart', cartRoutes);
-
-// Order routes
-const orderRoutes = require('./routes/order.routes');
-app.use('/api/order', orderRoutes);
-
-// Test Route
+// Health check route
 app.get('/', (req, res) => {
-  res.json({ message: 'E-Commerce API is running...' });
-});
-
-// =====================
-//  GLOBAL ERROR HANDLER
-// =====================
-app.use((err, req, res, next) => {
-  const statusCode = err.statusCode || 500;
-
-  res.status(statusCode).json({
-    success: false,
-    message: err.message || 'Internal Server Error',
-    stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
+  res.json({
+    message: 'E-Commerce API is running!',
+    version: '1.0.0',
+    endpoints: {
+      customers: '/api/customers',
+      sellers: '/api/sellers',
+      products: '/api/products',
+      cart: '/api/cart',
+      orders: '/api/orders'
+    }
   });
 });
 
-// =====================
-//  START SERVER
-// =====================
-const PORT = process.env.PORT || 5000;
+// API routes
+app.use('/api', routes);
 
+// Error handling middleware (must be after routes)
+app.use(notFound); // 404 handler
+app.use(errorHandler); // Global error handler
+
+// MongoDB connection
+const connectDB = async () => {
+  try {
+    await mongoose.connect(process.env.MONGODB_URI);
+    console.log('✅ MongoDB connected successfully');
+  } catch (error) {
+    console.error('❌ MongoDB connection error:', error.message);
+    process.exit(1); // Exit process with failure
+  }
+};
+
+// Connect to database
+connectDB();
+
+// Start server
+const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
-  console.log(`-----------------------------------`);
-  console.log(`Server Running On Port: ${PORT}`);
-  console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
-  console.log(`-----------------------------------`);
+  console.log(`🚀 Server is running on port ${PORT}`);
+  console.log(`📍 API URL: http://localhost:${PORT}/api`);
+});
+
+// Handle unhandled promise rejections
+process.on('unhandledRejection', (err) => {
+  console.error('❌ Unhandled Rejection:', err.message);
+  process.exit(1);
 });

@@ -1,14 +1,13 @@
-const express = require("express");
+const express = require('express');
 const router = express.Router();
-const orderController = require("../controller/order.controller");
-const auth = require("../middleware/auth.middleware");
+const orderController = require('../controller/order.controller');
+const { authenticateCustomer } = require('../middleware/auth.middleware');
+const { validatePlaceOrder } = require('../middleware/validation.middleware');
 
-// Customer
-router.post("/place", auth, orderController.placeOrder);
-router.get("/my-orders", auth, orderController.getCustomerOrders);
-
-// Admin/Seller (optional)
-router.get("/all", auth, orderController.getAllOrders);
-router.put("/update-status/:id", auth, orderController.updateOrderStatus);
+router.post('/place', authenticateCustomer, validatePlaceOrder, orderController.placeOrder);
+router.get('/', authenticateCustomer, orderController.getCustomerOrders);
+router.get('/:id', authenticateCustomer, orderController.getOrderById);
+router.put('/:id/status', authenticateCustomer, orderController.updateOrderStatus);
+router.put('/:id/cancel', authenticateCustomer, orderController.cancelOrder);
 
 module.exports = router;

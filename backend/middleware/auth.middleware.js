@@ -1,22 +1,59 @@
-const jwt = require("jsonwebtoken");
+const jwt = require('jsonwebtoken');
 
-module.exports = (req, res, next) => {
+// Authenticate Customer
+exports.authenticateCustomer = async (req, res, next) => {
   try {
-    const token = req.header("Authorization");
+    // Get token from header
+    const token = req.header('Authorization')?.replace('Bearer ', '');
 
     if (!token) {
-      return res.status(401).json({ message: "Access denied. No token provided." });
+      return res.status(401).json({ message: 'No token provided, authorization denied' });
     }
 
-    const extracted = token.split(" ")[1]; // Bearer TOKEN
+    // Verify token
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    const decoded = jwt.verify(extracted, process.env.JWT_SECRET);
-
-    req.userId = decoded.customerId || decoded.sellerId;
-    req.role = decoded.role;
+    // Add customer ID to request
+    req.customerId = decoded.customerId;
+    req.email = decoded.email;
 
     next();
   } catch (error) {
-    return res.status(400).json({ message: "Invalid or expired token" });
+    if (error.name === 'TokenExpiredError') {
+      return res.status(401).json({ message: 'Token has expired' });
+    }
+    if (error.name === 'JsonWebTokenError') {
+      return res.status(401).json({ message: 'Invalid token' });
+    }
+    res.status(401).json({ message: 'Token verification failed', error: error.message });
+  }
+};
+
+// Authenticate Seller
+exports.authenticateSeller = async (req, res, next) => {
+  try {
+    // Get token from header
+    const token = req.header('Authorization')?.replace('Bearer ', '');
+
+    if (!token) {
+      return res.status(401).json({ message: 'No token provided, authorization denied' });
+    }
+
+    // Verify token
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    // Add seller ID to request
+    req.sellerId = decoded.sellerId;
+    req.email = decoded.email;
+
+    next();
+  } catch (error) {
+    if (error.name === 'TokenExpiredError') {
+      return res.status(401).json({ message: 'Token has expired' });
+    }
+    if (error.name === 'JsonWebTokenError') {
+      return res.status(401).json({ message: 'Invalid token' });
+    }
+    res.status(401).json({ message: 'Token verification failed', error: error.message });
   }
 };
