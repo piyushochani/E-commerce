@@ -28,6 +28,7 @@ const customerSchema = new mongoose.Schema({
   },
   customer_phone: {
     type: String,
+    unique: true,
     required: true
   },
   customer_password: {
