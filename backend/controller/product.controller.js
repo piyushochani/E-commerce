@@ -1,29 +1,95 @@
 const Product = require('../models/product.model');
+const Seller = require('../models/Seller.model');
+const SellerOTP = require('../models/sellerotp.model');
+const { sendProductCreationOTP } = require('../utils/email');
 
-// Create a new product
-exports.createProduct = async (req, res) => {
+// Generate OTP
+const generateOTP = () => {
+  return Math.floor(100000 + Math.random() * 900000).toString();
+};
+
+// Step 1: Request OTP for product creation
+exports.requestProductCreationOTP = async (req, res) => {
   try {
-    const { product_name, product_price, product_description, product_img, product_sex, product_size, product_quantity, product_brand, product_type } = req.body;
+    const { product_name } = req.body;
 
-    // Expect product_img to be a Cloudinary URL from frontend
-    if (!product_img) {
-      return res.status(400).json({ message: 'Product image URL is required' });
+    // Get seller details
+    const seller = await Seller.findById(req.sellerId);
+    if (!seller) {
+      return res.status(404).json({ message: 'Seller not found' });
     }
 
+    // Generate OTP
+    const otp = generateOTP();
+
+    // Save OTP and product data
+    await SellerOTP.create({
+      seller_email: seller.seller_email,
+      otp,
+      otp_type: 'product_creation',
+      product_data: req.body,
+      expires_at: new Date(Date.now() + 10 * 60 * 1000)
+    });
+
+    // Send OTP to admin
+    const emailResult = await sendProductCreationOTP(seller.seller_name, product_name, otp);
+
+    res.status(200).json({
+      message: 'OTP has been sent to admin. Please contact admin to get the OTP.',
+      seller_email: seller.seller_email,
+      // FOR TESTING: Include preview URL and OTP in development
+      ...(process.env.NODE_ENV === 'development' && {
+        otp: otp,
+        emailPreviewUrl: emailResult.previewUrl,
+        note: 'OTP is shown only in development mode. Check console for email preview URL.'
+      })
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Error requesting OTP', error: error.message });
+  }
+};
+
+// Step 2: Verify OTP and create product
+exports.verifyOTPAndCreateProduct = async (req, res) => {
+  try {
+    const { otp } = req.body;
+
+    // Get seller
+    const seller = await Seller.findById(req.sellerId);
+    if (!seller) {
+      return res.status(404).json({ message: 'Seller not found' });
+    }
+
+    // Find valid OTP
+    const otpRecord = await SellerOTP.findOne({
+      seller_email: seller.seller_email,
+      otp,
+      otp_type: 'product_creation',
+      verified: false,
+      expires_at: { $gt: new Date() }
+    }).sort({ createdAt: -1 });
+
+    if (!otpRecord) {
+      return res.status(400).json({ message: 'Invalid or expired OTP' });
+    }
+
+    // Get product data from OTP record
+    const productData = otpRecord.product_data;
+
+    // Create product
     const product = await Product.create({
-      product_name,
-      product_price,
-      product_description,
-      product_img, // This will be the Cloudinary URL
-      product_sex,
-      product_size: product_size || -1,
-      product_quantity,
-      product_brand,
-      product_type,
+      ...productData,
       seller_id: req.sellerId
     });
 
-    res.status(201).json({ message: 'Product created successfully', product });
+    // Mark OTP as verified
+    otpRecord.verified = true;
+    await otpRecord.save();
+
+    res.status(201).json({
+      message: 'Product created successfully',
+      product
+    });
   } catch (error) {
     res.status(500).json({ message: 'Error creating product', error: error.message });
   }
