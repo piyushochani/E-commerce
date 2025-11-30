@@ -4,12 +4,17 @@ const sellerController = require('../controller/seller.controller');
 const { authenticateSeller } = require('../middleware/auth.middleware');
 const { validateSellerRegistration, validateSellerLogin } = require('../middleware/validation.middleware');
 
-// Registration with OTP (OTP sent to ochanipiyush07@gmail.com)
-router.post('/request-otp', validateSellerRegistration, sellerController.requestSellerRegistrationOTP);
-router.post('/verify-otp-register', validateSellerRegistration, sellerController.verifyOTPAndRegister);
+// Registration with OTP (3-step process: email verification → admin approval → complete)
+router.post('/request-email-otp', sellerController.requestEmailVerificationOTP);
+router.post('/verify-email-otp', sellerController.verifyEmailAndRequestAdminOTP);
+router.post('/verify-admin-otp-register', validateSellerRegistration, sellerController.verifyAdminOTPAndRegister);
 
-// Login (No OTP - just email + password)
+// Login
 router.post('/login', validateSellerLogin, sellerController.loginSeller);
+
+// Forgot Password (2-step process)
+router.post('/forgot-password', sellerController.requestForgotPasswordOTP);
+router.post('/reset-password', sellerController.resetPassword);
 
 // Public routes
 router.get('/', sellerController.getAllSellers);

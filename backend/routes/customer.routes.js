@@ -4,9 +4,16 @@ const customerController = require('../controller/customer.controller');
 const { authenticateCustomer } = require('../middleware/auth.middleware');
 const { validateCustomerRegistration, validateCustomerLogin } = require('../middleware/validation.middleware');
 
-// Public routes with validation
-router.post('/register', validateCustomerRegistration, customerController.registerCustomer);
+// Registration with OTP (2-step process)
+router.post('/request-registration-otp', customerController.requestRegistrationOTP);
+router.post('/verify-otp-register', validateCustomerRegistration, customerController.verifyOTPAndRegister);
+
+// Login
 router.post('/login', validateCustomerLogin, customerController.loginCustomer);
+
+// Forgot Password (2-step process)
+router.post('/forgot-password', customerController.requestForgotPasswordOTP);
+router.post('/reset-password', customerController.resetPassword);
 
 // Protected routes
 router.get('/profile', authenticateCustomer, customerController.getCustomerProfile);

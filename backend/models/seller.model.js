@@ -24,10 +24,41 @@ const sellerSchema = new mongoose.Schema({
   },
   seller_phone: {
     type: String,
-    required: true
+    required: true,
+    unique: true
+  },
+  seller_password: {
+    type: String,
+    required: true,
+    minlength: 6
+  },
+  email_verified: {
+    type: Boolean,
+    default: false
+  },
+  phone_verified: {
+    type: Boolean,
+    default: false
+  },
+  blocked: {
+    type: String,
+    enum: ['yes', 'no'],
+    default: 'no'
+  },
+  blocked_reason: {
+    type: String,
+    default: null
+  },
+  blocked_at: {
+    type: Date,
+    default: null
+  },
+  blocked_by: {
+    type: String,
+    default: null
   }
 }, {
   timestamps: true
 });
 
-module.exports = mongoose.model('Seller', sellerSchema);
+module.exports = mongoose.models.Seller || mongoose.model('Seller', sellerSchema);

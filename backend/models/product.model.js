@@ -17,7 +17,7 @@ const productSchema = new mongoose.Schema({
   },
   product_img: {
     type: String,
-    required: true // Cloudinary URL
+    required: true
   },
   product_sex: {
     type: String,
@@ -26,7 +26,7 @@ const productSchema = new mongoose.Schema({
   },
   product_size: {
     type: Number,
-    default: -1 // -1 denotes one size
+    default: -1
   },
   product_quantity: {
     type: Number,
@@ -53,4 +53,4 @@ const productSchema = new mongoose.Schema({
   timestamps: true
 });
 
-module.exports = mongoose.model('Product', productSchema);
+module.exports = mongoose.models.Product || mongoose.model('Product', productSchema);
