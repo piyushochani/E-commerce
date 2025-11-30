@@ -28,8 +28,8 @@ const customerSchema = new mongoose.Schema({
   },
   customer_phone: {
     type: String,
-    unique: true,
-    required: true
+    required: true,
+    unique: true
   },
   customer_password: {
     type: String,
@@ -39,9 +39,37 @@ const customerSchema = new mongoose.Schema({
   cart_id: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Cart'
+  },
+  email_verified: {
+    type: Boolean,
+    default: false
+  },
+  phone_verified: {
+    type: Boolean,
+    default: false
+  },
+  blocked: {
+    type: String,
+    enum: ['yes', 'no'],
+    default: 'no'
+  },
+  blocked_reason: {
+    type: String,
+    default: null
+  },
+  blocked_at: {
+    type: Date,
+    default: null
+  },
+  blocked_by: {
+    type: String,
+    default: null
   }
 }, {
   timestamps: true
 });
 
-module.exports = mongoose.model('Customer', customerSchema);
+// Check if model exists before creating
+const Customer = mongoose.models.Customer || mongoose.model('Customer', customerSchema);
+
+module.exports = Customer;
