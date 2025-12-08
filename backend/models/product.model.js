@@ -25,7 +25,7 @@ const productSchema = new mongoose.Schema({
     required: true
   },
   product_size: {
-    type: Number,
+    type:String,
     default: -1
   },
   product_quantity: {
@@ -42,7 +42,7 @@ const productSchema = new mongoose.Schema({
   product_type: {
     type: String,
     enum: ['electronics', 'clothing', 'basic_needs', 'furniture', 'books', 'toys', 'sports', 'beauty', 'other'],
-    required: true
+    required: false
   },
   seller_id: {
     type: mongoose.Schema.Types.ObjectId,
