@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { formatPrice } from '../../utils/helpers';
 import { useCart } from '../../hooks/useCart';
 
@@ -6,6 +6,10 @@ const CartItem = ({ item }) => {
   const { updateCartItem, removeFromCart } = useCart();
   const [quantity, setQuantity] = useState(item.quantity);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    setQuantity(item.quantity);
+  }, [item._id, item.quantity]);
 
   const handleUpdateQuantity = async (newQuantity) => {
     if (newQuantity < 1) return;

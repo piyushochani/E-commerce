@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { orderService } from '../../services/orderService';
 import { formatPrice, formatDate } from '../../utils/helpers';
 import { ORDER_STATUS_COLORS } from '../../utils/constants';
@@ -86,26 +86,49 @@ const OrderDetails = () => {
         <div className="bg-white rounded-lg shadow-md p-6 mb-6">
           <h2 className="font-semibold text-lg mb-4">Order Items</h2>
           <div className="space-y-4">
-            {orderItems.map((item) => (
-              <div key={item._id} className="flex gap-4 pb-4 border-b last:border-b-0">
-                <img
-                  src={item.product_id?.product_img || '/assets/images/default-product.png'}
-                  alt={item.product_id?.product_name}
-                  className="w-20 h-20 object-cover rounded"
-                />
-                <div className="flex-1">
-                  <h3 className="font-medium">{item.product_id?.product_name}</h3>
-                  <p className="text-sm text-gray-600">{item.product_id?.product_brand}</p>
-                  <p className="text-sm text-gray-600">Quantity: {item.quantity}</p>
+            {orderItems.map((item) => {
+              const productRef = item.product_id;
+              const productId =
+                productRef && typeof productRef === 'object'
+                  ? productRef._id
+                  : productRef;
+
+              const rowClass =
+                'flex gap-4 items-start w-full text-left rounded-lg transition hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500';
+
+              const rowInner = (
+                <>
+                  <img
+                    src={productRef?.product_img || '/assets/images/default-product.png'}
+                    alt={productRef?.product_name || 'Product'}
+                    className="w-20 h-20 shrink-0 object-cover rounded"
+                  />
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-medium text-gray-900">{productRef?.product_name || 'Product'}</h3>
+                    <p className="text-sm text-gray-600">{productRef?.product_brand}</p>
+                    <p className="text-sm text-gray-600">Quantity: {item.quantity}</p>
+                  </div>
+                  <div className="text-right shrink-0">
+                    <p className="font-semibold">{formatPrice(item.price_at_purchase)}</p>
+                    <p className="text-sm text-gray-600">
+                      Total: {formatPrice(item.price_at_purchase * item.quantity)}
+                    </p>
+                  </div>
+                </>
+              );
+
+              return (
+                <div key={item._id} className="pb-4 border-b last:border-b-0 last:pb-0">
+                  {productId ? (
+                    <Link to={`/customer/products/${productId}`} className={rowClass}>
+                      {rowInner}
+                    </Link>
+                  ) : (
+                    <div className="flex gap-4">{rowInner}</div>
+                  )}
                 </div>
-                <div className="text-right">
-                  <p className="font-semibold">{formatPrice(item.price_at_purchase)}</p>
-                  <p className="text-sm text-gray-600">
-                    Total: {formatPrice(item.price_at_purchase * item.quantity)}
-                  </p>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
 

@@ -4,8 +4,20 @@ export const productService = {
   // Public
   getAllProducts: (filters = {}) => {
     const params = new URLSearchParams();
-    if (filters.product_type) params.append('product_type', filters.product_type);
-    if (filters.product_sex) params.append('product_sex', filters.product_sex);
+    const types =
+      filters.product_types?.length > 0
+        ? filters.product_types
+        : filters.product_type
+          ? [filters.product_type]
+          : [];
+    types.forEach((t) => params.append('product_type', t));
+    const sexes =
+      filters.product_sexes?.length > 0
+        ? filters.product_sexes
+        : filters.product_sex
+          ? [filters.product_sex]
+          : [];
+    sexes.forEach((s) => params.append('product_sex', s));
     if (filters.product_brand) params.append('product_brand', filters.product_brand);
     if (filters.min_price) params.append('min_price', filters.min_price);
     if (filters.max_price) params.append('max_price', filters.max_price);

@@ -95,14 +95,27 @@ exports.verifyOTPAndCreateProduct = async (req, res) => {
   }
 };
 
+/** Normalize repeated query keys (?a=1&a=2) or single string into string array */
+const queryToStringArray = (value) => {
+  if (value === undefined || value === null || value === '') return [];
+  const arr = Array.isArray(value) ? value : [value];
+  return arr.map(String).filter(Boolean);
+};
+
 // Get all products with filters
 exports.getAllProducts = async (req, res) => {
   try {
     const { product_type, product_sex, product_brand, min_price, max_price, page = 1, limit = 20 } = req.query;
 
     const filter = {};
-    if (product_type) filter.product_type = product_type;
-    if (product_sex) filter.product_sex = product_sex;
+    const types = queryToStringArray(product_type);
+    if (types.length > 0) {
+      filter.product_type = types.length === 1 ? types[0] : { $in: types };
+    }
+    const sexes = queryToStringArray(product_sex);
+    if (sexes.length > 0) {
+      filter.product_sex = sexes.length === 1 ? sexes[0] : { $in: sexes };
+    }
     if (product_brand) filter.product_brand = product_brand;
     if (min_price || max_price) {
       filter.product_price = {};

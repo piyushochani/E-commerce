@@ -9,7 +9,10 @@ const ProductListing = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [filters, setFilters] = useState({});
+  const [filters, setFilters] = useState({
+    product_types: [],
+    product_sexes: []
+  });
   const [pagination, setPagination] = useState({
     currentPage: 1,
     totalPages: 1,
@@ -19,7 +22,10 @@ const ProductListing = () => {
   useEffect(() => {
     const category = searchParams.get('category');
     if (category) {
-      setFilters({ product_type: category });
+      setFilters({
+        product_types: [category],
+        product_sexes: []
+      });
     }
   }, [searchParams]);
 
@@ -45,7 +51,11 @@ const ProductListing = () => {
   };
 
   const handleFilterChange = (newFilters) => {
-    setFilters(newFilters);
+    setFilters((prev) => ({
+      ...prev,
+      ...newFilters,
+      page: undefined
+    }));
   };
 
   return (
@@ -84,7 +94,9 @@ const ProductListing = () => {
                     {[...Array(pagination.totalPages)].map((_, index) => (
                       <button
                         key={index}
-                        onClick={() => setFilters({ ...filters, page: index + 1 })}
+                        onClick={() =>
+                          setFilters((prev) => ({ ...prev, page: index + 1 }))
+                        }
                         className={`px-4 py-2 rounded ${
                           pagination.currentPage === index + 1
                             ? 'bg-blue-600 text-white'

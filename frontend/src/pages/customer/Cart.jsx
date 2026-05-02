@@ -10,7 +10,7 @@ const Cart = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    fetchCart();
+    fetchCart({ silent: true });
   }, []);
 
   const handleClearCart = async () => {

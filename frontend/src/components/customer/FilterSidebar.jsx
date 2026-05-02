@@ -1,18 +1,45 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { PRODUCT_TYPES, PRODUCT_SEX } from '../../utils/constants';
 
+const toggleMember = (arr, value) =>
+  arr.includes(value) ? arr.filter((x) => x !== value) : [...arr, value];
+
 const FilterSidebar = ({ onFilterChange, filters }) => {
+  const productTypes = filters.product_types ?? [];
+  const productSexes = filters.product_sexes ?? [];
+
   const [priceRange, setPriceRange] = useState({
     min: filters.min_price || '',
     max: filters.max_price || ''
   });
 
-  const handleTypeChange = (type) => {
-    onFilterChange({ ...filters, product_type: type === filters.product_type ? '' : type });
+  useEffect(() => {
+    setPriceRange({
+      min: filters.min_price || '',
+      max: filters.max_price || ''
+    });
+  }, [filters.min_price, filters.max_price]);
+
+  const handleTypeToggle = (type) => {
+    onFilterChange({
+      ...filters,
+      product_types: toggleMember(productTypes, type)
+    });
   };
 
-  const handleSexChange = (sex) => {
-    onFilterChange({ ...filters, product_sex: sex === filters.product_sex ? '' : sex });
+  const handleAllTypes = () => {
+    onFilterChange({ ...filters, product_types: [] });
+  };
+
+  const handleSexToggle = (sex) => {
+    onFilterChange({
+      ...filters,
+      product_sexes: toggleMember(productSexes, sex)
+    });
+  };
+
+  const handleAllSexes = () => {
+    onFilterChange({ ...filters, product_sexes: [] });
   };
 
   const handlePriceChange = () => {
@@ -25,14 +52,22 @@ const FilterSidebar = ({ onFilterChange, filters }) => {
 
   const clearFilters = () => {
     setPriceRange({ min: '', max: '' });
-    onFilterChange({});
+    onFilterChange({
+      product_types: [],
+      product_sexes: [],
+      min_price: '',
+      max_price: ''
+    });
   };
+
+  const allTypesSelected = productTypes.length === 0;
+  const allSexesSelected = productSexes.length === 0;
 
   return (
     <div className="bg-white rounded-lg shadow-md p-4">
       <div className="flex justify-between items-center mb-4">
         <h3 className="font-semibold text-lg">Filters</h3>
-        <button onClick={clearFilters} className="text-sm text-blue-600 hover:text-blue-700">
+        <button type="button" onClick={clearFilters} className="text-sm text-blue-600 hover:text-blue-700">
           Clear All
         </button>
       </div>
@@ -41,12 +76,21 @@ const FilterSidebar = ({ onFilterChange, filters }) => {
       <div className="mb-6">
         <h4 className="font-medium mb-3">Category</h4>
         <div className="space-y-2">
+          <label className="flex items-center cursor-pointer">
+            <input
+              type="checkbox"
+              checked={allTypesSelected}
+              onChange={handleAllTypes}
+              className="mr-2"
+            />
+            <span className="text-sm font-medium">All</span>
+          </label>
           {PRODUCT_TYPES.map((type) => (
             <label key={type} className="flex items-center cursor-pointer">
               <input
                 type="checkbox"
-                checked={filters.product_type === type}
-                onChange={() => handleTypeChange(type)}
+                checked={productTypes.includes(type)}
+                onChange={() => handleTypeToggle(type)}
                 className="mr-2"
               />
               <span className="text-sm capitalize">{type.replace('_', ' ')}</span>
@@ -55,16 +99,25 @@ const FilterSidebar = ({ onFilterChange, filters }) => {
         </div>
       </div>
 
-      {/* Gender Filter */}
+      {/* Gender Filter — All first */}
       <div className="mb-6">
         <h4 className="font-medium mb-3">Gender</h4>
         <div className="space-y-2">
+          <label className="flex items-center cursor-pointer">
+            <input
+              type="checkbox"
+              checked={allSexesSelected}
+              onChange={handleAllSexes}
+              className="mr-2"
+            />
+            <span className="text-sm font-medium">All</span>
+          </label>
           {PRODUCT_SEX.map((sex) => (
             <label key={sex} className="flex items-center cursor-pointer">
               <input
                 type="checkbox"
-                checked={filters.product_sex === sex}
-                onChange={() => handleSexChange(sex)}
+                checked={productSexes.includes(sex)}
+                onChange={() => handleSexToggle(sex)}
                 className="mr-2"
               />
               <span className="text-sm capitalize">{sex}</span>
@@ -92,6 +145,7 @@ const FilterSidebar = ({ onFilterChange, filters }) => {
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
           />
           <button
+            type="button"
             onClick={handlePriceChange}
             className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition"
           >

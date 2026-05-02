@@ -13,7 +13,8 @@ export const CartProvider = ({ children }) => {
   const authContext = useContext(AuthContext);
   const { isCustomer, isAuthenticated, loading: authLoading } = authContext || {};
 
-  const fetchCart = useCallback(async () => {
+  const fetchCart = useCallback(async (options = {}) => {
+    const silent = options.silent === true;
     // Wait for auth to finish loading
     if (authLoading) return;
     
@@ -25,10 +26,19 @@ export const CartProvider = ({ children }) => {
     }
     
     try {
-      setLoading(true);
+      if (!silent) setLoading(true);
       const response = await cartService.getCart();
+      const rawItems = response.data.cartItems || [];
+      const recomputedSum = rawItems.reduce(
+        (s, i) => s + Number(i.quantity) * Number(i.price_at_addition),
+        0
+      );
+      const apiTotal = Number(response.data.cart?.cart_total_amount ?? 0);
+      // #region agent log
+      fetch('http://127.0.0.1:7259/ingest/9b1b1ad4-3fdb-4c8c-a5bd-c063fece2236',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'8b7eee'},body:JSON.stringify({sessionId:'8b7eee',location:'CartContext.jsx:fetchCart',message:'api cart vs line sum',data:{hypothesisId:'H3',apiTotal,recomputedSum,totalMismatch:Math.abs(apiTotal-recomputedSum)>1e-6,hypothesisIdH5:'H5',itemSample:rawItems[0]?{q:rawItems[0].quantity,p:rawItems[0].price_at_addition,qt:typeof rawItems[0].quantity,pt:typeof rawItems[0].price_at_addition}:null},timestamp:Date.now(),runId:'pre-fix'})}).catch(()=>{});
+      // #endregion
       setCart(response.data.cart);
-      setCartItems(response.data.cartItems || []);
+      setCartItems(rawItems);
     } catch (error) {
       // Only log error if it's not authentication related
       if (error.response?.status !== 401 && error.response?.status !== 404) {
@@ -38,7 +48,7 @@ export const CartProvider = ({ children }) => {
       setCart(null);
       setCartItems([]);
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   }, [isCustomer, isAuthenticated, authLoading]);
 
@@ -63,7 +73,7 @@ export const CartProvider = ({ children }) => {
     try {
       console.log('Adding to cart:', { productId, quantity }); // Debug log
       await cartService.addToCart(productId, quantity);
-      await fetchCart();
+      await fetchCart({ silent: true });
       return { success: true };
     } catch (error) {
       console.error('Add to cart error:', error);
@@ -75,7 +85,7 @@ export const CartProvider = ({ children }) => {
   const updateCartItem = async (cartItemId, quantity) => {
     try {
       await cartService.updateCartItem(cartItemId, quantity);
-      await fetchCart();
+      await fetchCart({ silent: true });
       return { success: true };
     } catch (error) {
       console.error('Update cart error:', error);
@@ -86,7 +96,7 @@ export const CartProvider = ({ children }) => {
   const removeFromCart = async (cartItemId) => {
     try {
       await cartService.removeFromCart(cartItemId);
-      await fetchCart();
+      await fetchCart({ silent: true });
       return { success: true };
     } catch (error) {
       console.error('Remove from cart error:', error);
@@ -97,7 +107,7 @@ export const CartProvider = ({ children }) => {
   const clearCart = async () => {
     try {
       await cartService.clearCart();
-      await fetchCart();
+      await fetchCart({ silent: true });
       return { success: true };
     } catch (error) {
       console.error('Clear cart error:', error);
