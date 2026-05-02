@@ -10,9 +10,7 @@ const Header = () => {
 
   const handleLogout = () => {
     logout();
-    if (isCustomer) navigate('/customer/login');
-    else if (isSeller) navigate('/seller/login');
-    else if (isAdmin) navigate('/admin/login');
+    navigate('/');
   };
 
   return (
@@ -20,7 +18,10 @@ const Header = () => {
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <Link to={isCustomer ? '/customer/home' : isSeller ? '/seller/dashboard' : '/admin/dashboard'} className="text-2xl font-bold text-blue-600">
+          <Link
+            to={!isAuthenticated ? '/' : isCustomer ? '/customer/home' : isSeller ? '/seller/dashboard' : '/admin/dashboard'}
+            className="text-2xl font-bold text-blue-600"
+          >
             ECommerce
           </Link>
 
@@ -62,6 +63,35 @@ const Header = () => {
                   </span>
                 )}
               </Link>
+            )}
+
+            {!isAuthenticated && (
+              <div className="flex items-center gap-2">
+                <Link
+                  to="/customer/login"
+                  className="px-3 py-2 rounded-md text-sm font-medium border border-gray-200 hover:border-blue-600 hover:text-blue-600 transition"
+                >
+                  Login
+                </Link>
+                <Link
+                  to="/customer/signup"
+                  className="px-3 py-2 rounded-md text-sm font-medium border border-gray-200 hover:border-blue-600 hover:text-blue-600 transition"
+                >
+                  Signup
+                </Link>
+                <Link
+                  to="/seller/login"
+                  className="px-3 py-2 rounded-md text-sm font-medium border border-gray-200 hover:border-blue-600 hover:text-blue-600 transition"
+                >
+                  Seller Login
+                </Link>
+                <Link
+                  to="/admin/login"
+                  className="px-3 py-2 rounded-md text-sm font-medium bg-blue-600 text-white hover:bg-blue-700 transition"
+                >
+                  Admin Login
+                </Link>
+              </div>
             )}
 
             {isAuthenticated && (
