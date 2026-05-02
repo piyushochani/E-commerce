@@ -3,6 +3,19 @@
 # ========================
 node_modules/
 **/node_modules/
+frontend/node_modules/
+backend/node_modules/
+
+# ========================
+# Cache
+# ========================
+.cache/
+**/.cache/
+frontend/node_modules/.cache/
+**/node_modules/.cache/
+*.pack
+*.pack.old
+*.idx
 
 # ========================
 # Environment Variables
@@ -21,6 +34,7 @@ node_modules/
 build/
 dist/
 out/
+frontend/build/
 
 # ========================
 # Logs
@@ -52,25 +66,14 @@ desktop.ini
 coverage/
 
 # ========================
-# Cache
+# Misc Cache & Temp
 # ========================
-.cache/
-**/.cache/
 .eslintcache
 .npm/
-
-# ========================
-# CRA / React Specific
-# ========================
-frontend/build/
+*.tgz
+*.zip
 
 # ========================
 # Cursor AI
 # ========================
 .cursor/
-
-# ========================
-# Misc
-# ========================
-*.tgz
-*.zip
