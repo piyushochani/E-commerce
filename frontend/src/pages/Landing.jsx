@@ -63,6 +63,15 @@ const Landing = () => {
               </div>
             </div>
           </div>
+
+          <div className="mt-10 text-center">
+            <Link
+              to="/customer/home"
+              className="inline-flex items-center justify-center px-6 py-3 rounded-lg text-sm font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-100 transition"
+            >
+              Skip for now
+            </Link>
+          </div>
         </div>
       </main>
     </div>
