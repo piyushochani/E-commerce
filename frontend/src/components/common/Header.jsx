@@ -20,9 +20,15 @@ const Header = () => {
           {/* Logo */}
           <Link
             to={!isAuthenticated ? '/' : isCustomer ? '/customer/home' : isSeller ? '/seller/dashboard' : '/admin/dashboard'}
-            className="text-2xl font-bold text-blue-600"
+            className="flex items-center gap-2 font-bold text-blue-600"
           >
-            ECommerce
+            <img
+              src="/assets/images/logo.png"
+              alt="ECommerce"
+              className="h-9 w-auto"
+              loading="eager"
+            />
+            <span className="text-2xl hidden sm:inline">ECommerce</span>
           </Link>
 
           {/* Navigation */}
