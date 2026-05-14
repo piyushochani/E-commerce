@@ -106,10 +106,15 @@ exports.validateSellerLogin = (req, res, next) => {
 
 // Validate Product Creation
 exports.validateProductCreation = (req, res, next) => {
-  const { product_name, product_price, product_description, product_img, product_sex, product_quantity, product_brand, product_type } = req.body;
+  const { product_name, product_price, product_description, product_img, product_sex, product_quantity, product_brand, product_type, variants } = req.body;
 
   if (!product_name || !product_price || !product_description || !product_img || !product_sex || product_quantity === undefined || !product_brand || !product_type) {
     return res.status(400).json({ message: 'All required fields must be provided' });
+  }
+
+  // Validate product_img as array
+  if (!Array.isArray(product_img) || product_img.length === 0) {
+    return res.status(400).json({ message: 'Product images must be provided as a non-empty array' });
   }
 
   // Validate price
@@ -120,6 +125,18 @@ exports.validateProductCreation = (req, res, next) => {
   // Validate quantity
   if (product_quantity < 0) {
     return res.status(400).json({ message: 'Quantity cannot be negative' });
+  }
+
+  // Validate variants if provided
+  if (variants && Array.isArray(variants)) {
+    for (const variant of variants) {
+      if (!variant.size || !variant.color) {
+        return res.status(400).json({ message: 'Each variant must have a size and color' });
+      }
+      if (variant.quantity !== undefined && variant.quantity < 0) {
+        return res.status(400).json({ message: 'Variant quantity cannot be negative' });
+      }
+    }
   }
 
   // Validate product_sex
@@ -138,7 +155,7 @@ exports.validateProductCreation = (req, res, next) => {
 
 // Validate Add to Cart
 exports.validateAddToCart = (req, res, next) => {
-  const { product_id, quantity } = req.body;
+  const { product_id, quantity, variant } = req.body;
 
   if (!product_id || !quantity) {
     return res.status(400).json({ message: 'Product ID and quantity are required' });
@@ -146,6 +163,10 @@ exports.validateAddToCart = (req, res, next) => {
 
   if (quantity < 1) {
     return res.status(400).json({ message: 'Quantity must be at least 1' });
+  }
+
+  if (variant && (!variant.size || !variant.color)) {
+    return res.status(400).json({ message: 'Selected variant must include size and color' });
   }
 
   next();

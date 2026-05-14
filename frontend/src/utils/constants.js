@@ -14,6 +14,13 @@ export const PRODUCT_TYPES = [
 
 export const PRODUCT_SEX = ['male', 'female', 'both'];
 
+export const AVAILABLE_SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'Universal', 'One Size'];
+
+export const AVAILABLE_COLORS = [
+  'Red', 'Blue', 'Green', 'Black', 'White', 'Yellow', 'Grey', 
+  'Pink', 'Purple', 'Orange', 'Brown', 'Beige', 'Navy', 'Multi'
+];
+
 export const GENDERS = ['male', 'female', 'other'];
 
 export const ORDER_STATUS = [

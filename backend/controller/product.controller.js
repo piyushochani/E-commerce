@@ -11,7 +11,7 @@ const generateOTP = () => {
 // Step 1: Request OTP for product creation
 exports.requestProductCreationOTP = async (req, res) => {
   try {
-    const { product_name } = req.body;
+    const { product_name, variants, product_img } = req.body;
 
     // Get seller details
     const seller = await Seller.findById(req.sellerId);

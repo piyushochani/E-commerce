@@ -22,7 +22,7 @@ exports.getCart = async (req, res) => {
 // Add item to cart
 exports.addToCart = async (req, res) => {
   try {
-    const { product_id, quantity } = req.body;
+    const { product_id, quantity, variant } = req.body;
 
     // Find cart
     const cart = await Cart.findOne({ customer_id: req.customerId });
@@ -36,12 +36,16 @@ exports.addToCart = async (req, res) => {
       return res.status(404).json({ message: 'Product not found' });
     }
 
-    // Check if product already in cart
-    let cartItem = await CartItem.findOne({ cart_id: cart._id, product_id });
+    // Check if product with same variant already in cart
+    const query = { cart_id: cart._id, product_id };
+    if (variant) {
+      query['variant.size'] = variant.size;
+      query['variant.color'] = variant.color;
+    } else {
+      query.variant = { $exists: false };
+    }
 
-    // #region agent log
-    fetch('http://127.0.0.1:7259/ingest/9b1b1ad4-3fdb-4c8c-a5bd-c063fece2236',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'8b7eee'},body:JSON.stringify({sessionId:'8b7eee',location:'cart.controller.js:addToCart:beforeMerge',message:'addToCart merge decision',data:{hypothesisId:'H1',mergePath:!!cartItem,catalogUnitPrice:product.product_price,lineUnitPrice:cartItem?cartItem.price_at_addition:null,priceStale:!!cartItem&&Number(cartItem.price_at_addition)!==Number(product.product_price),addQty:quantity},timestamp:Date.now(),runId:'pre-fix'})}).catch(()=>{});
-    // #endregion
+    let cartItem = await CartItem.findOne(query);
 
     if (cartItem) {
       // Update quantity
@@ -53,7 +57,8 @@ exports.addToCart = async (req, res) => {
         cart_id: cart._id,
         product_id,
         quantity,
-        price_at_addition: product.product_price
+        price_at_addition: product.product_price,
+        variant
       });
     }
 
@@ -61,11 +66,6 @@ exports.addToCart = async (req, res) => {
     const cartItems = await CartItem.find({ cart_id: cart._id });
     const totalQuantity = cartItems.reduce((sum, item) => sum + item.quantity, 0);
     const totalAmount = cartItems.reduce((sum, item) => sum + (item.quantity * item.price_at_addition), 0);
-
-    // #region agent log
-    const sumCheck = cartItems.reduce((s, it) => s + Number(it.quantity) * Number(it.price_at_addition), 0);
-    fetch('http://127.0.0.1:7259/ingest/9b1b1ad4-3fdb-4c8c-a5bd-c063fece2236',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'8b7eee'},body:JSON.stringify({sessionId:'8b7eee',location:'cart.controller.js:addToCart:afterTotals',message:'cart totals after add',data:{hypothesisId:'H3',totalAmount,sumCheckNumeric:sumCheck,amountMismatch:Math.abs(totalAmount-sumCheck)>1e-6,lineCount:cartItems.length},timestamp:Date.now(),runId:'pre-fix'})}).catch(()=>{});
-    // #endregion
 
     cart.cart_quantity = totalQuantity;
     cart.cart_total_amount = totalAmount;
@@ -83,10 +83,6 @@ exports.updateCartItem = async (req, res) => {
     const cart_item_id = req.params.cart_item_id || req.body.cart_item_id;
     const { quantity } = req.body;
 
-    // #region agent log
-    fetch('http://127.0.0.1:7259/ingest/9b1b1ad4-3fdb-4c8c-a5bd-c063fece2236',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'8b7eee'},body:JSON.stringify({sessionId:'8b7eee',location:'cart.controller.js:updateCartItem:resolveId',message:'resolved cart line id',data:{hypothesisId:'H_ROUTE',fromParams:!!req.params.cart_item_id,hasResolvedId:!!cart_item_id,cartItemIdLen:cart_item_id?String(cart_item_id).length:0},timestamp:Date.now(),runId:'post-fix'})}).catch(()=>{});
-    // #endregion
-
     const cartItem = await CartItem.findById(cart_item_id);
     if (!cartItem) {
       return res.status(404).json({ message: 'Cart item not found' });
@@ -94,11 +90,6 @@ exports.updateCartItem = async (req, res) => {
 
     cartItem.quantity = quantity;
     await cartItem.save();
-
-    const productForLine = await Product.findById(cartItem.product_id);
-    // #region agent log
-    fetch('http://127.0.0.1:7259/ingest/9b1b1ad4-3fdb-4c8c-a5bd-c063fece2236',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'8b7eee'},body:JSON.stringify({sessionId:'8b7eee',location:'cart.controller.js:updateCartItem:afterQty',message:'update qty vs catalog',data:{hypothesisId:'H2',catalogUnitPrice:productForLine?.product_price,lineUnitPrice:cartItem.price_at_addition,priceStale:productForLine&&Number(cartItem.price_at_addition)!==Number(productForLine.product_price),newQty:quantity},timestamp:Date.now(),runId:'pre-fix'})}).catch(()=>{});
-    // #endregion
 
     // Update cart totals
     const cart = await Cart.findById(cartItem.cart_id);
@@ -109,10 +100,6 @@ exports.updateCartItem = async (req, res) => {
     cart.cart_quantity = totalQuantity;
     cart.cart_total_amount = totalAmount;
     await cart.save();
-
-    // #region agent log
-    fetch('http://127.0.0.1:7259/ingest/9b1b1ad4-3fdb-4c8c-a5bd-c063fece2236',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'8b7eee'},body:JSON.stringify({sessionId:'8b7eee',location:'cart.controller.js:updateCartItem:afterSave',message:'cart totals persisted',data:{hypothesisId:'H_ROUTE',cartTotalAmount:cart.cart_total_amount,cartQty:cart.cart_quantity,lineQty:cartItem.quantity},timestamp:Date.now(),runId:'post-fix'})}).catch(()=>{});
-    // #endregion
 
     res.status(200).json({ message: 'Cart item updated', cartItem, cart });
   } catch (error) {

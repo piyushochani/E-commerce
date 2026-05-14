@@ -29,15 +29,20 @@ const ProductCard = ({ product }) => {
     }
   };
 
+  // Handle image display
+  const productImg = Array.isArray(product.product_img) 
+    ? product.product_img[0] 
+    : product.product_img;
+
   return (
     <Link to={`/customer/products/${product._id}`} className="block">
       <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition group">
         {/* Product Image */}
         <div className="relative h-64 bg-gray-200 overflow-hidden">
           <img
-            src={product.product_img || '/assets/images/default-product.png'}
+            src={productImg || '/assets/images/default-product.png'}
             alt={product.product_name}
-            className="w-full h-full object-cover group-hover:scale-110 transition duration-300"
+            className="w-full h-full object-contain bg-gray-50 group-hover:scale-110 transition duration-300"
           />
           {product.product_quantity === 0 && (
             <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">

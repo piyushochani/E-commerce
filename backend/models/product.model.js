@@ -16,7 +16,7 @@ const productSchema = new mongoose.Schema({
     required: true
   },
   product_img: {
-    type: String,
+    type: [String],
     required: true
   },
   product_sex: {
@@ -34,6 +34,12 @@ const productSchema = new mongoose.Schema({
     min: 0,
     default: 0
   },
+  variants: [{
+    size: { type: String, required: true },
+    color: { type: String, required: true },
+    quantity: { type: Number, default: 0, min: 0 },
+    price: { type: Number, min: 0 }
+  }],
   product_brand: {
     type: String,
     required: true,

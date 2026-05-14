@@ -33,7 +33,8 @@ exports.placeOrder = async (req, res) => {
         order_id: order._id,
         product_id: item.product_id._id,
         quantity: item.quantity,
-        price_at_purchase: item.price_at_addition
+        price_at_purchase: item.price_at_addition,
+        variant: item.variant
       });
 
       // Update product quantity

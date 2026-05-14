@@ -9,9 +9,6 @@ import CustomerRoutes from './routes/CustomerRoutes';
 import SellerRoutes from './routes/SellerRoutes';
 import AdminRoutes from './routes/AdminRoutes';
 
-// Landing
-import Landing from './pages/Landing';
-
 // Auth Pages
 import CustomerLogin from './pages/customer/CustomerLogin';
 import CustomerSignup from './pages/customer/CustomerSignup';
@@ -25,8 +22,8 @@ function App() {
       <AuthProvider>
         <CartProvider>
           <Routes>
-            {/* Landing/Home */}
-            <Route path="/" element={<Landing />} />
+            {/* Redirect root to customer home */}
+            <Route path="/" element={<Navigate to="/customer/home" replace />} />
 
             {/* Customer Auth */}
             <Route path="/customer/login" element={<CustomerLogin />} />

@@ -102,13 +102,6 @@ const CustomerLogin = () => {
               {loading ? <LoadingSpinner size="sm" /> : 'Sign in'}
             </button>
           </div>
-
-          <div className="text-center space-y-2">
-            <p className="text-sm text-gray-600">Are you a seller?</p>
-            <Link to="/seller/login" className="font-medium text-blue-600 hover:text-blue-500">
-              Login as Seller
-            </Link>
-          </div>
         </form>
       </div>
     </div>

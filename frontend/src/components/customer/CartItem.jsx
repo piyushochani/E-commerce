@@ -27,19 +27,33 @@ const CartItem = ({ item }) => {
     }
   };
 
+  // Handle image display (check if product_img is array or string)
+  const productImg = Array.isArray(item.product_id?.product_img) 
+    ? item.product_id.product_img[0] 
+    : item.product_id?.product_img;
+
   return (
     <div className="flex gap-4 bg-white p-4 rounded-lg shadow-md">
       {/* Product Image */}
       <img
-        src={item.product_id?.product_img || '/assets/images/default-product.png'}
+        src={productImg || '/assets/images/default-product.png'}
         alt={item.product_id?.product_name}
-        className="w-24 h-24 object-cover rounded"
+        className="w-24 h-24 object-contain bg-gray-50 rounded"
       />
 
       {/* Product Details */}
       <div className="flex-1">
         <h3 className="font-semibold text-lg mb-1">{item.product_id?.product_name}</h3>
-        <p className="text-gray-600 text-sm mb-2">{item.product_id?.product_brand}</p>
+        <p className="text-gray-600 text-sm mb-1">{item.product_id?.product_brand}</p>
+        
+        {/* Variant Info */}
+        {item.variant && (
+          <div className="flex gap-2 mb-2">
+            <span className="text-xs bg-gray-100 px-2 py-1 rounded">Size: {item.variant.size}</span>
+            <span className="text-xs bg-gray-100 px-2 py-1 rounded">Color: {item.variant.color}</span>
+          </div>
+        )}
+
         <p className="text-blue-600 font-bold">{formatPrice(item.price_at_addition)}</p>
       </div>
 
